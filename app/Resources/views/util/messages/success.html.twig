@@ -1,0 +1,17 @@
+<!--  ajax -->
+{% if flashMessage is not defined %}
+        <div class="alert alert-success hidden" id="message" role="alert">
+            <div class="container">
+                <span id="review-message"></span>
+            </div>
+        </div>
+{% endif %}
+
+<!-- No ajax -->
+{% for flashMessage in app.session.flashbag.get('successMessage') %}
+    <div id="noAjax-notification">
+        <div class="alert alert-success" role="alert">
+            <div class="container">{{ flashMessage }}</div>
+        </div>
+    </div>
+{% endfor %}

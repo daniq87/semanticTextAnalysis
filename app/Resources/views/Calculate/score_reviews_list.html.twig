@@ -1,0 +1,26 @@
+<table id="tableScoreReview" class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th> 
+                {{ knp_pagination_sortable(pagination, 'Review', 'r.description') }}
+
+            </th>
+            <th>{{ 'Matches' }}</th>
+            <th>{{ 'Total' }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for review in pagination %}
+            <tr data-id="{{ review.id }}">
+                <td width="60%">{{review.review.description}}</td>
+                <td id="text-found">{{ review.matches }}</td>
+                <td id="total">{{review.score}}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{# display navigation #}
+{{ include('util/knp_navigation.html.twig') }}
+

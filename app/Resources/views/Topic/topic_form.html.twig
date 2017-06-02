@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {{ parent() }}
+    {{ include('util/messages/success.html.twig') }}
+    <div class="main container">
+        <div class="row well">
+            <div class="col-md-6">
+                <div class="page-header">
+                    <h2>{{ title }}</h2>
+                </div>
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'role' : 'form'}}) }}
+                <h4 class="text-danger">{{ form_errors(form) }}</h4>
+
+                <fieldset>
+                    <div class="form-group">
+                        {{ form_label(form.name) }}
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder' : 'Topic name'}}) }}
+                        <span class="text-danger">{{ form_errors(form.name) }}</span>
+                    </div>
+
+                </fieldset>
+
+                <p>
+                    {{ form_widget(form.save, {'label' : actionButton, 'attr': {'class': 'btn btn-success'}}) }}
+                </p>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+
+
+    {% if topicId is defined %}
+        <div class="container">
+            <h2>Criterias of the topic: {{ topicName }} </h2>
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#listCriteria">Criterias</a></li>
+                <li><a id="tabFormCriteria" class="hidden" data-toggle="tab" href="#formCriteria">Form</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div id="listCriteria" class="tab-pane fade in active">
+                    <div style="padding-bottom: 15%;padding-top: 10%" class="rTableCell">
+                        <a href="#" onClick="$('#tabFormCriteria').removeClass('hidden');activeTab('formCriteria', '{{ path('app_criteria_add', { topicId: topicId }) }}')" id="createCriteria" class="btn btn-success">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            {{ 'Create' }}
+                        </a>
+                    </div> 
+
+                    <div class="rTableBackground">
+                        <div  class="rTableRow">
+                            <div  class="rTableCell">
+                                <input type="text" id="filterCriteria"  placeholder="{{'Filter by attribute '}}" />
+                            </div>                             
+                            <div  class="rTableCell">
+                                <span id="filter-list" style="cursor:pointer" title="Filter" class="glyphicon glyphicon-filter"></span>
+                            </div>                             
+                            <div  class="rTableCell">
+                                <span id="clear-filter" style="cursor:pointer" title="Clear filter" class="glyphicon glyphicon-refresh"></span>
+                            </div>   
+                        </div>
+                    </div>    
+                    <div id="criterias-container">{% include "Criteria/criterias_list.html.twig" %}</div>
+                    <div id="loading">{% include "util/progress-bar.html.twig" %}</div>
+
+                </div>
+                <div id="formCriteria" class="tab-pane fade">
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+
+{% endblock %}
+
+{% block javascripts  %}
+    {{ parent() }}
+    <script src="{{ asset('bundles/app/js/delete-ajax-id.js') }}"></script>
+    <script>
+
+        
+       $(document).ready(function () {
+
+            // Filter list
+            var $filterCriteria = $('#filterCriteria');
+
+
+            // Press enter
+            $('#filterCriteria').on('keypress', function (e) {
+                if (e.which === 13) {
+                    filterList($filterCriteria);
+                }
+            });
+
+
+            // click icon filter
+            $('#filter-list').on('click', function (e) {
+                filterList($filterCriteria);
+            });
+
+            function filterList(filterCriteria) {
+                var params = getParams(filterCriteria) + '&pag=1';
+                ajaxRefreshDiv("GET", "", params, "criterias-container");
+            }
+
+            // KNP Paginator Ajax
+            $('#criterias-container').on('click', ".navigation .pagination li a", function (e) {
+                e.preventDefault();
+                getCurrentPage($(this).html());
+                var params = getParams($filterCriteria) + '&pag=' + $('#currentPage').val();
+                ajaxRefreshDiv("GET", "", params, "criterias-container");
+            });
+
+            // Clear filter     
+            $('#clear-filter').on('click', function (e) {
+                $('#filterCriteria').val('');
+
+                var params = getParams($filterCriteria) + '&pag=1';
+                ajaxRefreshDiv("GET", "", params, "criterias-container");
+            });
+
+
+            function getParams(filterCriteria) {
+                var params = '?criteria=' + filterCriteria.val();
+                return params;
+            }
+
+        });        
+    </script>
+
+{% endblock %}

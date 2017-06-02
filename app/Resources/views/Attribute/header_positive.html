@@ -1,0 +1,21 @@
+<div style="padding-bottom: 15%;padding-top: 10%" class="rTableCell">
+    <a href="{{ path('app_positive_attribute_add') }}" id="createCriteria" class="btn btn-success">
+        <span class="glyphicon glyphicon-plus"></span>
+        {{ 'Create' }}
+    </a>
+</div> 
+
+<div class="rTableBackground">
+    <div  class="rTableRow">
+        <div  class="rTableCell">
+            <input type="text" onkeyup="if (event.which === 13) {var params = getPositiveParams();ajaxRefreshDiv('GET', '/positive_attribute/index', params, 'positive-container')}" id="filterPositiveAttribute"  placeholder="{{'Filter by Name '}}" />
+        </div>   
+        <div  class="rTableCell">
+            <span id="filter-list" onClick="var params = getPositiveParams();
+                    ajaxRefreshDiv('GET', '/positive_attribute/index', params, 'positive-container')" style="cursor:pointer" title="Filter" class="glyphicon glyphicon-filter"></span>
+        </div>                             
+        <div  class="rTableCell">
+            <span id="clear-filter" onClick="clearPositiveFilter('GET', '/positive_attribute/index', '?attributeName=&pag=1', 'positive-container')" style="cursor:pointer" title="Clear filter" class="glyphicon glyphicon-refresh"></span>
+        </div>          
+    </div>
+</div>  

@@ -1,0 +1,18 @@
+
+body {
+  padding-bottom: 40px;
+/*  background-image: url(../images/semantic.jpg);*/
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-color: #eee;
+}
+
+.title-welcome {
+  max-width: 630px;
+  padding: 15px;
+  margin: 0 auto;
+  color: #A52A2A;
+  border-radius: 5px;
+}

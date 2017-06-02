@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('public/css/welcome.css') }}">
+{% endblock %}
+
+{% block body %}
+    {{ parent() }}
+
+    <div class="container">
+        <h2 class="title-welcome">{{ 'WELCOME: SEMANTIC TEXT ANALYSIS'}}</h2>
+    </div>
+{% endblock %}

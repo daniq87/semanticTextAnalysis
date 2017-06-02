@@ -1,0 +1,22 @@
+<div style="padding-bottom: 15%;padding-top: 10%" class="rTableCell">
+    <a href="{{ path('app_negative_attribute_add') }}" id="createCriteria" class="btn btn-success">
+        <span class="glyphicon glyphicon-plus"></span>
+        {{ 'Create' }}
+    </a>
+</div> 
+
+<div class="rTableBackground">
+    <div  class="rTableRow">
+
+        <div  class="rTableCell">
+            <input type="text" onkeyup="if (event.which === 13) {var params = getNegativeParams();ajaxRefreshDiv('GET', '/negative_attribute/index', params, 'negative-container')}" id="filterNegativeAttribute"  placeholder="{{'Filter by Name '}}" />
+        </div>   
+        <div  class="rTableCell">
+            <span id="filter-list" onClick="var params = getNegativeParams();
+                    ajaxRefreshDiv('GET', '/negative_attribute/index', params, 'negative-container')" style="cursor:pointer" title="Filter" class="glyphicon glyphicon-filter"></span>
+        </div>                             
+        <div  class="rTableCell">
+            <span id="clear-filter" onClick="clearNegativeFilter('GET', '/negative_attribute/index', '?attributeName=&pag=1', 'negative-container')" style="cursor:pointer" title="Clear filter" class="glyphicon glyphicon-refresh"></span>
+        </div>         
+    </div>
+</div>  

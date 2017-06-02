@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {{ parent() }}
+    {{ include('util/messages/success.html.twig') }}
+
+
+    <div class="container">
+        <h2>Attributes</h2>
+        <ul class="nav nav-tabs">
+            <li id="tabPositive"><a data-toggle="tab" href="#listPositiveAttribute">Positive</a></li>
+            <li id="tabNegative"><a data-toggle="tab" href="#listNegativeAttribute">Negative</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="listPositiveAttribute" class="tab-pane fade">
+                <div>{% include "Attribute/header_positive.html" %}</div>
+                <div id="positive-container">
+                    {% include "Attribute/positive_attribute_list.html.twig" %}
+                </div>
+                <div>{% include "util/progress-bar.html.twig" %}</div>
+
+            </div>
+            <div id="listNegativeAttribute" class="tab-pane fade">
+                <div>{% include "Attribute/header_negative.html" %}</div>
+                <div id="negative-container">
+                    {% include "Attribute/negative_attribute_list.html.twig" %}
+                </div>
+                <div>{% include "util/progress-bar.html.twig" %}</div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts  %}
+    {{ parent() }}
+    <script src="{{ asset('bundles/app/js/delete-ajax-id.js') }}"></script> 
+    <script src="{{ asset('bundles/app/js/attributes/operation_positive_list.js') }}"></script> 
+    <script src="{{ asset('bundles/app/js/attributes/operation_negative_list.js') }}"></script>
+
+    <script>
+
+        var tabSelected = '{{ tabSelected }}';
+        if(tabSelected === "positive"){
+            $('#tabPositive').addClass("active"); 
+            $('#listPositiveAttribute').addClass("in active"); 
+        }else{
+            $('#tabNegative').addClass("active");
+            $('#listNegativeAttribute').addClass("in active"); 
+        }
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr("href");
+            if (target == "#listNegativeAttribute") {
+                ajaxRefreshDiv("GET", '{{ path('app_negative_attribute_index') }}', "?pag=1&attributeName=", 'negative-container');
+            } else {
+                ajaxRefreshDiv("GET", '{{ path('app_positive_attribute_index') }}', "?pag=1&attributeName=", 'positive-container');
+            }
+
+        });
+    </script>
+
+
+
+{% endblock %}

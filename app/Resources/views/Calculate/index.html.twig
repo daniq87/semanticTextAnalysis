@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {{ parent() }}
+
+    {# Progress bar #}
+    <div class="progress no-border hidden" id="delete-progress">
+        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>  
+
+    {{ include('util/messages/success.html.twig') }}
+
+
+    <div class="container">
+        <div class="col-md-12">
+            <div class="page-header margin-none">
+                <h2 class="padding-none">{% trans %} Reviews {% endtrans %}</h2>
+            </div>
+            <div class="table-responsive">
+
+                {# If there aren't results, a message will be displayed #}
+                {% if not pagination|length %}
+                    <h2>{{ 'No search results'|trans}}</h2>
+                {% endif %}
+
+                {% if pagination|length %}
+                    <p>
+                        {% trans %} Total records: {% endtrans %} <span id="total">{{ pagination.getTotalItemCount }}</span>
+                    </p>
+
+                    <div class="rTableBackground">
+                        <div  class="rTableRow">
+                           <div  class="rTableCell">
+                                <input type="text" onkeyup="if (event.which === 13) {var params = getParams();ajaxRefreshDiv('GET', '{{ path('app_calculate_index') }}', params, 'reviews-score-container')}" id="filterReview"  placeholder="{{'Filter by Review '}}" />
+                            </div>   
+                            <div  class="rTableCell">
+                                <span id="filter-list" onClick="var params = getParams();
+                                        ajaxRefreshDiv('GET', '{{ path('app_calculate_index') }}', params, 'reviews-score-container')" style="cursor:pointer" title="Filter" class="glyphicon glyphicon-filter"></span>
+                            </div>                             
+                            <div  class="rTableCell">
+                                <span id="clear-filter" onClick="clearFilter('GET', '{{ path('app_calculate_index') }}', '?reviewName=&pag=1', 'reviews-score-container')" style="cursor:pointer" title="Clear filter" class="glyphicon glyphicon-refresh"></span>
+                            </div>  
+                            <div style="padding-left: 15%" class="rTableCell">
+                                <a href="{{ path("app_calculate_score") }}" id="calculateScore" class="btn btn-success">
+                                    <span class="glyphicon glyphicon-play"></span>
+                                    {{ 'Calculate score' }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>   
+                    <div id="reviews-score-container">{% include "Calculate/score_reviews_list.html.twig" %}</div>
+                    <div id="loading">{% include "util/progress-bar.html.twig" %}</div>
+
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block javascripts  %}
+    {{ parent() }}
+
+    <script>
+        function getParams() {
+            return '?reviewName=' + document.getElementById("filterReview").value  + '&pag=1';
+        }
+        
+        function clearFilter(method, action, params, div) {
+            $('#filterReview').val('');
+            ajaxRefreshDiv(method, action, params, div);
+        }
+
+
+        $(document).ready(function () {
+            // Filter list
+            var $filterReview = $('#filterReview');
+            // KNP Paginator Ajax
+            $('#reviews-score-container').on('click', ".navigation .pagination li a", function (e) {
+                    e.preventDefault();
+                    getCurrentPage($(this).html());
+                    var params = '?reviewName=' + $filterReview.val() + '&pag=' + $('#currentPage').val();
+                    ajaxRefreshDiv('GET', 'index', params, 'reviews-score-container');
+            });
+        });
+    </script>    
+{% endblock %}
