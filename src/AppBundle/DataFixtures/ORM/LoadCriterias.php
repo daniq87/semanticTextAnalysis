@@ -47,6 +47,8 @@ class LoadCriterias extends AbstractFixture implements OrderedFixtureInterface {
         $this->createCriteria($manager, 'food', 'food');
         $this->createCriteria($manager, 'dinner', 'food');
         $this->createCriteria($manager, 'lunch', 'food');
+        $this->createCriteria($manager, 'taste', 'food');
+        
 
         // TOPIC: BATHROOM
         $this->createCriteria($manager, 'bathroom', 'bathroom');

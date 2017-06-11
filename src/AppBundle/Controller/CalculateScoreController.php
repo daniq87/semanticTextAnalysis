@@ -2,10 +2,11 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\ReviewScore;
+use AppBundle\Exception\MandatoryElementsTextAnalizeException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Entity\ReviewScore;
 
 class CalculateScoreController extends Controller {
 
@@ -48,23 +49,30 @@ class CalculateScoreController extends Controller {
         $separators = $this->get('app.separator')->findAllOrderedById();
         $positiveAttributes = $this->get('app.positive')->findAllOrderedByName();
         $negativeAttributes = $this->get('app.negative')->findAllOrderedByName();
-        $arrayPositiveRegEx = $this->get('app.score')->getRegEx($positiveAttributes);
-        $arrayNegativeRegEx = $this->get('app.score')->getRegEx($negativeAttributes);
+        $arrayPositiveRegEx = $this->get('app.analizeText')->getRegEx($positiveAttributes);
+        $arrayNegativeRegEx = $this->get('app.analizeText')->getRegEx($negativeAttributes);
 
         // Get all the reviews and calculate the score for each review.
         $reviews = $this->get('app.review')->findAllOrderedById();
-        foreach ($reviews as $review) {
-            $reviewScore = new ReviewScore($review);
-            // Calculate positive score.
-            $reviewScore = $this->get('app.score')->calculateScore($reviewScore, $criterias, $arrayPositiveRegEx, $separators, true);
-            // Calculate negative score.
-            $reviewScore = $this->get('app.score')->calculateScore($reviewScore, $criterias, $arrayNegativeRegEx, $separators, false);
+        try {
+            foreach ($reviews as $review) {
+                $reviewScore = new ReviewScore($review);
+                // Calculate positive score.
+                $reviewScore = $this->get('app.analizeText')->calculateScore($reviewScore, $criterias, $arrayPositiveRegEx, $separators, true);
+                // Calculate negative score.
+                $reviewScore = $this->get('app.analizeText')->calculateScore($reviewScore, $criterias, $arrayNegativeRegEx, $separators, false);
 
-            // Create \AppBundle\Entity\ReviewScore
-            $this->get('app.score')->create($reviewScore);
+                // Create \AppBundle\Entity\ReviewScore
+                $this->get('app.score')->create($reviewScore);
+            }
+
+            return $this->redirectToRoute('app_calculate_index');
+        } catch (MandatoryElementsTextAnalizeException $mandatoryElementsException) {
+            $this->addFlash('error', $mandatoryElementsException->getMessage());
+            // Redirect to the menu to create the mandatory element
+            return $this->redirectToRoute($mandatoryElementsException->getRedirectAction());
         }
-
-        return $this->redirectToRoute('app_calculate_index');
     }
+    
 
 }

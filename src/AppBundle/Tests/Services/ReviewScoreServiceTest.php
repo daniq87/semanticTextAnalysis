@@ -6,6 +6,8 @@ use AppBundle\Entity\PositiveAttribute;
 use AppBundle\Entity\Review;
 use AppBundle\Entity\ReviewScore;
 use AppBundle\Entity\Separator;
+use AppBundle\Exception\MandatoryElementsTextAnalizeException;
+use AppBundle\Services\AnalizeTextService;
 use AppBundle\Services\ReviewScoreService;
 use AppBundle\Services\ReviewService;
 use Doctrine\ORM\EntityManager;
@@ -48,51 +50,72 @@ class ReviewScoreServiceTest extends PHPUnit_Framework_TestCase {
     protected $positiveAttributes = [];
     protected $negativeAttributes = [];
     protected $separators = [];
+    protected $arrayPositiveRegEx = [];
+    protected $arrayNegativeRegEx = [];
+    protected $analizeTextService;
 
-    public function setUp() {
-
-        // Get test Reviews.
+    private function initializeReviews() {
         for ($i = 0; $i < count($this->reviewsDescription); $i++) {
             $review = new Review();
             $review->setDescription($this->reviewsDescription[$i]);
 
             $this->reviews[] = $review;
         }
+    }
 
-        // Get Criterias.
+    private function initializeCriterias() {
         for ($i = 0; $i < count($this->criteriasName); $i++) {
             $criteria = new Criteria();
             $criteria->setName($this->criteriasName[$i]);
 
             $this->criterias[] = $criteria;
         }
+    }
 
-        // Get Positive attributes.
+    private function initializePositiveAttributes() {
         for ($i = 0; $i < count($this->positiveAttributeName); $i++) {
             $positiveAttribute = new PositiveAttribute();
             $positiveAttribute->setName($this->positiveAttributeName[$i]);
             $this->positiveAttributes[] = $positiveAttribute;
         }
+    }
 
-        // Get Negative attributes.
+    private function initializeNegativeAttributes() {
         for ($i = 0; $i < count($this->negativeAttributeName); $i++) {
             $negativeAttribute = new NegativeAttribute();
             $negativeAttribute->setName($this->negativeAttributeName[$i]);
             $this->negativeAttributes[] = $negativeAttribute;
         }
+    }
 
-        // Get separators
+    private function initializeSeparators() {
         for ($i = 0; $i < count($this->separatorName); $i++) {
 
             $separator = new Separator();
             $separator->setSeparator($this->separatorName[$i]);
             $separator->setIsSymbol(true);
-            if ( ctype_alpha($separator->getSeparator()))  {
+            if (ctype_alpha($separator->getSeparator())) {
                 $separator->setIsSymbol(false);
             }
 
             $this->separators[] = $separator;
         }
+    }
+
+    public function setUp() {
+        // Get test Reviews.
+        $this->initializeReviews();
+        // Get Criterias.
+        $this->initializeCriterias();
+        // Get Positive attributes.
+        $this->initializePositiveAttributes();
+        // Get Negative attributes.
+        $this->initializeNegativeAttributes();
+        // Get separators
+        $this->initializeSeparators();
+        $this->analizeTextService = new AnalizeTextService();
+        $this->arrayPositiveRegEx = $this->analizeTextService->getRegEx($this->positiveAttributes);
+        $this->arrayNegativeRegEx = $this->analizeTextService->getRegEx($this->negativeAttributes);
     }
 
     /**
@@ -102,6 +125,7 @@ class ReviewScoreServiceTest extends PHPUnit_Framework_TestCase {
     public function testCalculateScore() {
 
         $reviewService = $this->createMock(ReviewService::class);
+        $this->analizeTextService = new AnalizeTextService();
         $entityManager = $this
                 ->getMockBuilder(EntityManager::class)
                 ->disableOriginalConstructor()
@@ -109,16 +133,15 @@ class ReviewScoreServiceTest extends PHPUnit_Framework_TestCase {
 
 
         $reviewScoreService = new ReviewScoreService($entityManager, $reviewService);
-        $arrayPositiveRegEx = $reviewScoreService->getRegEx($this->positiveAttributes);
-        $arrayNegativeRegEx = $reviewScoreService->getRegEx($this->negativeAttributes);
+
 
 
         foreach ($this->reviews as $key => $review) {
             $reviewScore = new ReviewScore($review);
             // Calculate positive attributes.
-            $reviewScore = $reviewScoreService->calculateScore($reviewScore, $this->criterias, $arrayPositiveRegEx, $this->separators, true);
+            $reviewScore = $this->analizeTextService->calculateScore($reviewScore, $this->criterias, $this->arrayPositiveRegEx, $this->separators, true);
             // Calculate negative attributes.
-            $reviewScore = $reviewScoreService->calculateScore($reviewScore, $this->criterias, $arrayNegativeRegEx, $this->separators, false);
+            $reviewScore = $this->analizeTextService->calculateScore($reviewScore, $this->criterias, $this->arrayNegativeRegEx, $this->separators, false);
 
             switch ($key) {
 
@@ -133,7 +156,7 @@ class ReviewScoreServiceTest extends PHPUnit_Framework_TestCase {
                 case 2: // "Terrible. Old, not quite clean. Lost my reservation, then \"found\" a smaller room, for the same price, of course. Noisy. Absolutely no parking, unless you luck out for the $10 spaces (of which there are 12). Water in bathroom sink would not turn off. Not hair dryer, no iron in room. Miniscule shower- better be thin to use it!",
                     $this->assertEquals(-5, $reviewScore->getScore());
                     $this->assertEquals("terrible, old, not quite clean, smaller room, thin", $reviewScore->getMatches());
-                    break;  
+                    break;
                 case 3: // "I have stayed here 4 or 5 times while visiting LA. Despite travelling all over the world and staying in some of the best international hotels ( for work), Hotel Caliornia is one of my absolute favourites. Perfect location, right on the beach. I love the way you can just open your door and be outside, no elevators, corridors big glass windows. The ambience is so nice, retro perfect. As for the staff, I have had consistently superb service, with much more personal service and attention to detail than is usual in bigger hotels. Aaron and Katy were just two who have been exemplary this time but really everyone is terrific. Can't recommend it highly enough.",
                     $this->assertEquals(4, $reviewScore->getScore());
                     $this->assertEquals("best international hotel, Perfect location, love, superb service", $reviewScore->getMatches());
@@ -145,8 +168,71 @@ class ReviewScoreServiceTest extends PHPUnit_Framework_TestCase {
                 case 5: // "Across the road from Santa Monica Pier is exactly where you want to be when visiting Santa Monica, as well as not far from lots of shops and restaurants/bars.Hotel itself is very new & modern, rooms were great. Comfortable beds & possibly the best shower ever!"
                     $this->assertEquals(4, $reviewScore->getScore());
                     $this->assertEquals("not far from lots of shops and restaurants/bar, rooms were great, Comfortable bed, best shower", $reviewScore->getMatches());
-                    break;                
+                    break;
             }
+        }
+    }
+
+    /**
+     * @test
+     * It can't analize the review if doesn't exist Criterias
+     */
+    public function testMandatoryElementsExceptionCriterias() {
+
+        $this->criterias = [];
+
+        try {
+            $reviewScore = new ReviewScore($this->reviews[0]);
+            $reviewScore = $this->analizeTextService->calculateScore($reviewScore, $this->criterias, $this->arrayPositiveRegEx, $this->separators, true);
+        } catch (MandatoryElementsTextAnalizeException $ex) {
+            $this->expectExceptionCode($ex->getCode());
+            $this->expectExceptionMessage($ex->getMessage());
+
+            $this->assertEquals(MandatoryElementsTextAnalizeException::CODE_NOT_EXISTS_CRITERIAS, $ex->getCode());
+            $this->assertEquals(MandatoryElementsTextAnalizeException::MSG_NOT_EXISTS_CRITERIAS, $ex->getMessage());
+            $this->assertEquals('app_topic_index', $ex->getRedirectAction());
+        }
+    }
+
+    /**
+     * @test
+     * It can't analize the review if doesn't exist Positive attributes
+     */
+    public function testMandatoryElementsExceptionPositiveAttributes() {
+
+        $this->arrayPositiveRegEx = [];
+
+        try {
+            $reviewScore = new ReviewScore($this->reviews[0]);
+            $reviewScore = $this->analizeTextService->calculateScore($reviewScore, $this->criterias, $this->arrayPositiveRegEx, $this->separators, true);
+        } catch (MandatoryElementsTextAnalizeException $ex) {
+            $this->expectExceptionCode($ex->getCode());
+            $this->expectExceptionMessage($ex->getMessage());
+
+            $this->assertEquals('app_positive_attribute_index', $ex->getRedirectAction());
+            $this->assertEquals(MandatoryElementsTextAnalizeException::CODE_NOT_EXISTS_POSITIVE_ATTRIBUTES, $ex->getCode());
+            $this->assertEquals(MandatoryElementsTextAnalizeException::MSG_NOT_EXISTS_POSITIVE_ATTRIBUTES, $ex->getMessage());
+        }
+    }
+
+    /**
+     * @test
+     * It can't analize the review if doesn't exist Negative attributes
+     */
+    public function testMandatoryElementsExceptionNegativeAttributes() {
+
+        $this->arrayNegativeRegEx = [];
+
+        try {
+            $reviewScore = new ReviewScore($this->reviews[0]);
+            $reviewScore = $this->analizeTextService->calculateScore($reviewScore, $this->criterias, $this->arrayNegativeRegEx, $this->separators, false);
+        } catch (MandatoryElementsTextAnalizeException $ex) {
+            $this->expectExceptionCode($ex->getCode());
+            $this->expectExceptionMessage($ex->getMessage());
+
+            $this->assertEquals('app_negative_attribute_index', $ex->getRedirectAction());
+            $this->assertEquals(MandatoryElementsTextAnalizeException::CODE_NOT_EXISTS_NEGATIVE_ATTRIBUTES, $ex->getCode());
+            $this->assertEquals(MandatoryElementsTextAnalizeException::MSG_NOT_EXISTS_NEGATIVE_ATTRIBUTES, $ex->getMessage());
         }
     }
 

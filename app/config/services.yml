@@ -25,7 +25,9 @@ services:
         arguments: [ @doctrine.orm.entity_manager ]    
     app.score:
         class: AppBundle\Services\ReviewScoreService   
-        arguments: [ @doctrine.orm.entity_manager, @app.review ]  
+        arguments: [ @doctrine.orm.entity_manager, @app.review ] 
+    app.analizeText:
+        class: AppBundle\Services\AnalizeTextService           
     app.separator:
         class: AppBundle\Services\SeparatorService   
         arguments: [ @doctrine.orm.entity_manager ]         

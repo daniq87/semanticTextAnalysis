@@ -7,10 +7,19 @@
         </div>
 {% endif %}
 
-<!-- No ajax -->
+<!-- No ajax SUCCESS -->
 {% for flashMessage in app.session.flashbag.get('successMessage') %}
     <div id="noAjax-notification">
         <div class="alert alert-success" role="alert">
+            <div class="container">{{ flashMessage }}</div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- No ajax ERROR -->
+{% for flashMessage in app.session.flashbag.get('error') %}
+    <div id="noAjax-notification">
+        <div class="alert alert-danger" role="alert">
             <div class="container">{{ flashMessage }}</div>
         </div>
     </div>
