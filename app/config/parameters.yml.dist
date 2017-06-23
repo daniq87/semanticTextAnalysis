@@ -6,8 +6,7 @@ parameters:
     database_port: null
     database_name: text_analysis
     database_user: root
-    database_password: null
-    database_driver: pdo_sqlite
+    database_password: ~
     # You should uncomment this if you want to use pdo_sqlite
     database_path: "%kernel.root_dir%/semantic_text_analysis.db3"
 
